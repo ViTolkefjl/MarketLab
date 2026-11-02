@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Маркет-Лаб — симулятор кабинета продавца</title>
+<style>
+:root{
+  --bg:#f4f5f7;--surface:#fff;--ink:#1b1f2a;--muted:#667085;--line:#e3e6ec;
+  --brand:#5b3df5;--brand-soft:#ece8ff;--ok:#12805c;--ok-soft:#e3f5ed;--warn:#b54708;--warn-soft:#fef0e1;--bad:#c4320a;--bad-soft:#fdecea;
+  --radius:12px;font-family:"Inter",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit}
+header{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 16px}
+.logo{font-weight:800;letter-spacing:-.02em;font-size:18px}
+.logo span{color:#b9a8ff}
+.stat{font-size:13px;opacity:.9}
+.stat b{font-size:15px;opacity:1}
+.grow{flex:1}
+.btn{border:0;border-radius:10px;padding:9px 14px;cursor:pointer;background:var(--brand);color:#fff;font-weight:600}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.btn.light{background:var(--brand-soft);color:var(--brand)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.next{background:#ffd23f;color:#1b1f2a}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr) 300px;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{text-align:left;background:transparent;border:0;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--ink)}
+nav button.active{background:var(--brand-soft);color:var(--brand);font-weight:600}
+nav button .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad);margin-left:6px;vertical-align:middle}
+main{min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+h1{font-size:22px;margin:0 0 12px}
+h2{font-size:17px;margin:0 0 10px}
+h3{font-size:15px;margin:0 0 8px}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.kpi{background:var(--bg);border-radius:10px;padding:10px 12px}
+.kpi .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted)}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+input[type=text],input[type=number],select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink)}
+textarea{min-height:80px;resize:vertical}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:6px}
+td{border-bottom:1px solid var(--line);padding:7px 6px;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.gray{background:var(--bg);color:var(--muted)}
+.meter{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok)}
+.tips li{margin:3px 0}
+.chk{display:flex;gap:8px;align-items:center;margin:4px 0;color:var(--ink);font-size:14px}
+.chk input{width:18px;height:18px}
+.kw{display:inline-flex;gap:4px;align-items:center;background:var(--bg);border-radius:99px;padding:3px 9px;margin:3px;font-size:13px;cursor:pointer;border:1px solid var(--line)}
+.kw b{color:var(--brand);font-size:11px}
+aside .card{position:sticky;top:76px}
+.mission h3{font-size:16px}
+.mission .task{background:var(--brand-soft);border-radius:10px;padding:10px;margin:8px 0}
+.life{background:var(--ok-soft);border-radius:10px;padding:10px;margin-top:10px;font-size:14px}
+.progress{font-size:13px;color:var(--muted)}
+.log{max-height:260px;overflow:auto;font-size:13px}
+.log div{padding:5px 0;border-bottom:1px dashed var(--line)}
+.alert{border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px}
+.alert.warn{background:var(--warn-soft)}
+.alert.bad{background:var(--bad-soft)}
+.alert.ok{background:var(--ok-soft)}
+.review{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.stars{color:#f5a524;letter-spacing:1px}
+.chart{width:100%;height:auto;display:block}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;z-index:50;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.quiz button{display:block;width:100%;text-align:left;margin:6px 0;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:500}
+dl.dict dt{font-weight:700;margin-top:10px}
+dl.dict dd{margin:2px 0 0}
+@media (max-width:1100px){.layout{grid-template-columns:190px minmax(0,1fr)}aside{grid-column:1/-1;order:-1}aside .card{position:static}}
+@media (max-width:720px){
+  .layout{grid-template-columns:minmax(0,1fr);padding:10px;gap:10px}
+  body{padding-bottom:64px}
+  nav{flex-direction:row;overflow-x:auto;gap:2px;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+  nav button{white-space:nowrap;padding:9px 10px;font-size:14px;flex:none}
+  .next{padding:7px 12px}
+  .grid2,.grid3{grid-template-columns:minmax(0,1fr)}
+  header{gap:6px 12px;padding:8px 12px}
+  .stat{font-size:12px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Маркет<span>-Лаб</span></div>
+  <div class="stat">День <b id="hDay">1</b></div>
+  <div class="stat">Баланс <b id="hMoney">0 ₽</b></div>
+  <div class="stat">Рейтинг <b id="hRating">—</b></div>
+  <div class="stat">Очки <b id="hPoints">0</b></div>
+  <div class="grow"></div>
+  <button class="btn next" id="nextDay">Следующий день ▶</button>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main"></main>
+  <aside><div class="card mission" id="mission"></div></aside>
+</div>
+<input type="file" id="importFile" accept="application/json" hidden>
+<script>
+"use strict";
+/* ============ ДАННЫЕ ============ */
+const CATALOG = [
+  {id:"mug",name:"Термокружка 450 мл",cost:250,market:690,comm:.18,base:8,
+   chars:["Объём, мл","Материал","Цвет","Время сохранения тепла, ч","Крышка","Можно мыть в посудомойке"],
+   kws:[["термокружка",95],["термокружка с крышкой",70],["кружка для кофе",60],["термостакан",55],["в машину",35],["подарок",30],["нержавеющая сталь",25],["450 мл",20]]},
+  {id:"case",name:"Чехол для смартфона",cost:80,market:390,comm:.22,base:12,
+   chars:["Модель телефона","Материал","Цвет","Защита камеры","Совместимость с MagSafe","Толщина, мм"],
+   kws:[["чехол на телефон",95],["чехол противоударный",75],["прозрачный чехол",60],["силиконовый",50],["защита камеры",40],["magsafe",30],["тонкий",22],["матовый",18]]},
+  {id:"toy",name:"Игрушка-антистресс",cost:120,market:450,comm:.20,base:7,
+   chars:["Возраст","Материал","Размер, см","Цвет","Тип","Безопасность (сертификат)"],
+   kws:[["антистресс",95],["игрушка антистресс",80],["сквиш",55],["для детей",50],["мялка",40],["подарок ребенку",30],["мягкая игрушка",25],["поп ит",20]]},
+  {id:"org",name:"Органайзер для косметики",cost:300,market:990,comm:.20,base:5,
+   chars:["Количество отделений","Материал","Размеры, см","Цвет","Вращающийся","Крышка"],
+   kws:[["органайзер для косметики",95],["органайзер",75],["для хранения косметики",60],["вращающийся",45],["прозрачный",35],["на стол",30],["для ванной",25],["акриловый",20]]},
+  {id:"lamp",name:"Настольная LED-лампа",cost:700,market:1890,comm:.17,base:4,
+   chars:["Мощность, Вт","Цветовая температура, К","Режимы яркости","Питание","Цвет","Беспроводная зарядка"],
+   kws:[["настольная лампа",95],["лампа светодиодная",70],["лампа для школьника",55],["led лампа",50],["с беспроводной зарядкой",35],["на прищепке",25],["сенсорная",22],["для рабочего стола",20]]}
+];
+const PHOTOS = [
+  ["main","Главное фото на белом фоне",10],["life","Фото в интерьере / в использовании",3],["info","Инфографика с преимуществами",3],
+  ["size","Фото с размерами",3],["pack","Фото упаковки и комплектации",3],["video","Видеообложка",3]
+];
+const WAREHOUSES = [
+  {id:"center",name:"Склад «Центр»",days:2,fee:20},
+  {id:"east",name:"Склад «Восток»",days:4,fee:10}
+];
+const LOG_FBO = 60, LOG_FBS = 90, STORAGE = 1.5, START_MONEY = 30000;
+
+const MISSIONS = [
+ {id:"m1",title:"Первая карточка",task:"Открой «Товары», выбери товар и заполни название карточки — не короче 30 символов.",
+  check:s=>s.products.some(p=>p.card.title.trim().length>=30),
+  life:"Название — главное поле карточки. Покупатель ищет товар словами, и площадка показывает карточки, где эти слова есть в названии. Хорошее название: что это + главное свойство + для кого. Например: «Термокружка 450 мл с крышкой для кофе в машину»."},
+ {id:"m2",title:"Карточка на 80+",task:"Доведи контент-рейтинг любой карточки до 80 и выше: характеристики, фото, описание, ключевые слова.",
+  check:s=>s.products.some(p=>contentRating(p)>=80),
+  life:"У Ozon есть показатель «контент-рейтинг»: чем полнее карточка, тем выше она в поиске. На WB похожая логика — незаполненные характеристики и мало фото режут показы. На собеседовании: «Сначала заполняю все характеристики и фото, потом работаю с SEO»."},
+ {id:"m3",title:"Цена с прибылью",task:"Открой «Цены», поставь цену товару так, чтобы маржа была не меньше 20 %, и нажми «Сохранить цену».",
+  check:s=>s.products.some(p=>p.priceSet && unit(p,"fbo").margin>=20),
+  life:"Юнит-экономика — сколько остаётся с одной продажи после комиссии, логистики, хранения и себестоимости. Цифры в игре учебные, но формула как в жизни. Фраза для собеседования: «Перед запуском считаю юнит-экономику, чтобы не продавать в минус»."},
+ {id:"m4",title:"Первая поставка FBO",task:"Открой «Поставки» и отправь на склад площадки не меньше 20 штук (схема FBO).",
+  check:s=>s.products.some(p=>p.transit.some(t=>t.scheme==="fbo")||p.stock.fbo>0),
+  life:"FBO — товар лежит на складе маркетплейса, площадка сама собирает и доставляет заказ. Минус — платишь за хранение и ждёшь приёмку. Плюс — быстрая доставка, поэтому покупатели чаще выбирают такие товары."},
+ {id:"m5",title:"Приёмка",task:"Нажимай «Следующий день», пока поставка не доедет до склада и товар не появится в остатках FBO.",
+  check:s=>s.products.some(p=>p.stock.fbo>0),
+  life:"В жизни поставку надо записать в слот, довезти, и склад принимает её не сразу — от пары дней до недели. Поэтому менеджер планирует поставки заранее, а не когда товар уже кончился."},
+ {id:"m6",title:"Публикация и первая продажа",task:"В «Товарах» опубликуй карточку, у которой есть остатки, и дождись первого заказа.",
+  check:s=>s.totals.orders>0,
+  life:"Новая карточка сначала стоит низко в поиске — у неё нет продаж и отзывов. Поэтому первые дни продажи медленные. Это нормально, именно на старте обычно включают рекламу."},
+ {id:"m7",title:"Страховка FBS",task:"Закупи себе домой не меньше 10 штук того же товара (схема FBS). Они продаются, если склад площадки опустеет.",
+  check:s=>s.products.some(p=>p.stock.fbs>=10),
+  life:"FBS — товар хранится у продавца, а площадка только доставляет. Доставка дольше, поэтому заказов обычно меньше, но это страховка от нулевых остатков на складе маркетплейса."},
+ {id:"m8",title:"Запусти рекламу",task:"Открой «Реклама» и включи кампанию с бюджетом от 300 ₽ в день на опубликованный товар.",
+  check:s=>s.products.some(p=>p.published && p.ad.on && p.ad.budget>=300),
+  life:"Реклама внутри маркетплейса поднимает карточку выше в поиске. Ставка — сколько готов платить за 1000 показов: выше ставка — лучше места, но меньше показов на тот же бюджет."},
+ {id:"m9",title:"Разбор рекламы",task:"Пусть реклама поработает хотя бы 3 дня. Потом ответь на вопрос ниже.",
+  check:s=>s.flags.quizDone,
+  quiz:{q:"Реклама потратила 600 ₽ и принесла заказов на 4 000 ₽. Чему равен ДРР?",opts:["6,7 %","15 %","66 %"],ok:1,needAdDays:3},
+  life:"ДРР — доля рекламных расходов: расходы на рекламу ÷ выручка с неё × 100 %. 600 ÷ 4000 = 15 %. CTR — клики ÷ показы, CR — заказы ÷ клики. Эти три слова спрашивают почти на каждом собеседовании."},
+ {id:"m10",title:"Ответь на плохой отзыв",task:"Открой «Отзывы» и вежливо ответь на отзыв с оценкой 3★ или ниже (не короче 40 символов).",
+  check:s=>s.reviews.some(r=>r.stars<=3 && r.answer && r.answer.length>=40),
+  life:"Ответы на отзывы читают будущие покупатели. Схема: поблагодарить → признать проблему → предложить решение. Без споров и оправданий. Неотвеченный негатив тянет рейтинг магазина вниз."},
+ {id:"m11",title:"Без пустых остатков",task:"Продержись 7 дней подряд так, чтобы у опубликованных товаров не кончался товар. Смотри «дней хватит» в Аналитике.",
+  check:s=>s.flags.streak>=7,
+  life:"Out of stock (товар закончился) — главная беда селлера: карточка выпадает из поиска и потом долго восстанавливается. Менеджер каждый день смотрит оборачиваемость — на сколько дней хватит остатка."},
+ {id:"m12",title:"Выйди в плюс",task:"Накопи прибыль 5 000 ₽ и больше (смотри «Сводку»).",
+  check:s=>s.totals.profit>=5000,
+  life:"Выручка — это не прибыль. Прибыль = выручка − комиссия − логистика − хранение − реклама − себестоимость. На собеседовании скажи: «Слежу не только за продажами, но и за маржой каждого товара»."}
+];
+
+const DICT = [
+ ["FBO","Товар хранится на складе маркетплейса, площадка сама собирает и доставляет заказ."],
+ ["FBS","Товар хранится у продавца, продавец собирает заказ, площадка только доставляет."],
+ ["Контент-рейтинг","Насколько полно заполнена карточка: название, описание, характеристики, фото."],
+ ["SEO карточки","Ключевые слова в названии и описании, по которым покупатели находят товар."],
+ ["Юнит-экономика","Сколько денег остаётся с одной проданной штуки после всех расходов."],
+ ["Маржа","Прибыль с продажи в процентах от цены."],
+ ["CTR","Кликабельность: клики ÷ показы × 100 %."],
+ ["CR","Конверсия: заказы ÷ клики × 100 %."],
+ ["ДРР","Доля рекламных расходов: расходы на рекламу ÷ выручка × 100 %."],
+ ["Ставка (CPM)","Сколько платишь за 1000 показов рекламы."],
+ ["Оборачиваемость","На сколько дней хватит остатка при текущих продажах."],
+ ["Out of stock","Товар закончился на складе — карточка перестаёт продаваться."],
+ ["СПП","Скидка постоянного покупателя на WB: её даёт площадка за свой счёт. В игре её нет."]
+];
+
+/* ============ СОСТОЯНИЕ ============ */
+const KEY="marketlab_v1";
+function newState(){
+  return {v:1,day:1,money:START_MONEY,points:0,missionIdx:0,view:"home",selected:"mug",
+    products:CATALOG.map(c=>({id:c.id,card:{title:"",desc:"",chars:{},photos:{},kws:""},price:c.market,priceSet:false,published:false,pubDay:null,
+      stock:{fbo:0,fbs:0},transit:[],ad:{on:false,budget:300,bid:300},adDays:0,promoUntil:0})),
+    history:[],reviews:[],log:[{d:1,t:"Магазин открыт. Стартовый баланс 30 000 ₽. Начни с миссии справа."}],
+    totals:{orders:0,revenue:0,profit:0},flags:{streak:0,quizDone:false,forcedNeg:false},alerts:[]};
+}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||S.v!==1)S=newState();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* ============ РАСЧЁТЫ ============ */
+const cat=id=>CATALOG.find(c=>c.id===id);
+const prod=id=>S.products.find(p=>p.id===id);
+const rub=n=>(Math.round(n)).toLocaleString("ru-RU")+" ₽";
+const pct=n=>(Math.round(n*10)/10).toLocaleString("ru-RU")+" %";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function kwList(p){return p.card.kws.split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)}
+function contentParts(p){
+  const c=cat(p.id),t=p.card.title.toLowerCase(),d=p.card.desc.toLowerCase();
+  const kws=c.kws.map(k=>k[0]);
+  const parts=[];
+  const tl=p.card.title.trim().length;
+  parts.push(["Название 30–100 символов",tl>=30&&tl<=100?10:0,10]);
+  parts.push(["Главный ключ «"+kws[0]+"» в названии",t.includes(kws[0])?10:0,10]);
+  const extra=kws.slice(1).filter(k=>t.includes(k)).length;
+  parts.push(["Ещё 2 ключа в названии",extra>=2?5:extra*2,5]);
+  parts.push(["Описание от 200 символов",p.card.desc.trim().length>=200?10:Math.floor(p.card.desc.trim().length/200*10),10]);
+  const dk=kws.filter(k=>d.includes(k)).length;
+  parts.push(["2 ключа в описании",dk>=2?5:dk*2,5]);
+  const filled=c.chars.filter(ch=>(p.card.chars[ch]||"").trim()).length;
+  parts.push(["Характеристики ("+filled+" из 6)",Math.round(filled/6*25),25]);
+  let ph=0;PHOTOS.forEach(([id,,w])=>{if(p.card.photos[id])ph+=w});
+  parts.push(["Фото (главное на белом обязательно)",Math.min(25,ph),25]);
+  const n=new Set(kwList(p)).size;
+  parts.push(["Поле ключевых слов: 5+ штук",n>=5?10:n*2,10]);
+  return parts;
+}
+function contentRating(p){return contentParts(p).reduce((a,x)=>a+x[1],0)}
+function unit(p,scheme){
+  const c=cat(p.id),price=p.price;
+  const comm=price*c.comm,log=scheme==="fbs"?LOG_FBS:LOG_FBO,stor=scheme==="fbs"?0:STORAGE*7;
+  const profit=price-comm-log-stor-c.cost;
+  return {price,comm,log,stor,cost:c.cost,profit,margin:price>0?profit/price*100:0};
+}
+function marketPrice(p){const c=cat(p.id);return p.promoUntil>=S.day?Math.round(c.market*0.88):c.market}
+function shopRating(){
+  const r=S.reviews.slice(-60);if(!r.length)return null;
+  return r.reduce((a,x)=>a+x.stars,0)/r.length;
+}
+function shopFactor(){
+  const r=shopRating();let f=r===null?0.9:clamp(0.75+0.25*(r-3)/2,0.6,1.05);
+  const unans=S.reviews.filter(x=>x.stars<=3&&!x.answer&&S.day-x.d>=2).length;
+  return Math.max(0.5,f-0.03*Math.min(unans,6));
+}
+function inGoods(){return S.products.reduce((a,p)=>a+(p.stock.fbo+p.stock.fbs+p.transit.reduce((x,t)=>x+t.qty,0))*cat(p.id).cost,0)}
+function avgOrders(p,days=3){
+  const h=S.history.slice(-days);if(!h.length)return 0;
+  return h.reduce((a,x)=>a+((x.by[p.id]||{}).orders||0),0)/h.length;
+}
+
+/* ============ СИМУЛЯЦИЯ ДНЯ ============ */
+function rnd(a,b){return a+Math.random()*(b-a)}
+function poissonish(x){const f=Math.floor(x);return f+(Math.random()<x-f?1:0)}
+function nextDay(){
+  const day=S.day,rec={day,orders:0,revenue:0,profit:0,ad:0,by:{}};
+  const msgs=[];
+  S.products.forEach(p=>{
+    const c=cat(p.id);
+    // приёмка поставок
+    p.transit=p.transit.filter(t=>{if(t.arrive<=day){p.stock.fbo+=t.qty;msgs.push("Склад принял поставку: "+c.name+" — "+t.qty+" шт.");return false}return true});
+    const r={orders:0,revenue:0,profit:0,ad:0,impr:0,clicks:0,adOrders:0};
+    const stockTotal=p.stock.fbo+p.stock.fbs;
+    if(p.published){
+      const q=contentRating(p)/100;
+      const pf=clamp(Math.pow(marketPrice(p)/Math.max(1,p.price),2.2),0.1,2.5);
+      const age=day-p.pubDay;const ramp=clamp(0.3+age*0.1,0.3,1);
+      const scheme=p.stock.fbo>0?1:(p.stock.fbs>0?0.8:0);
+      let organic=c.base*Math.pow(q,1.3)*pf*ramp*shopFactor()*scheme*rnd(0.75,1.25);
+      // реклама
+      let adOrders=0;
+      if(p.ad.on&&p.ad.budget>0){
+        if(S.money>=p.ad.budget&&stockTotal>0){
+          const impr=Math.round(p.ad.budget/p.ad.bid*1000);
+          const pos=clamp(p.ad.bid/300,0.4,1.8);
+          const ctr=0.022*(0.3+q)*Math.sqrt(pos);
+          const clicks=poissonish(impr*ctr*rnd(0.85,1.15));
+          const cr=clamp(0.045*(0.3+q)*Math.pow(pf,0.6)*shopFactor()*(scheme||0.8),0,0.25);
+          adOrders=poissonish(clicks*cr);
+          r.impr=impr;r.clicks=clicks;r.ad=p.ad.budget;
+          S.money-=p.ad.budget;p.adDays++;
+        }else if(S.money<p.ad.budget){p.ad.on=false;msgs.push("Реклама «"+c.name+"» остановлена: не хватает денег на бюджет.")}
+      }
+      let want=poissonish(organic)+adOrders;
+      let fromFbo=Math.min(want,p.stock.fbo),fromFbs=Math.min(want-fromFbo,p.stock.fbs);
+      const sold=fromFbo+fromFbs;
+      if(sold<want&&want>0)msgs.push("⚠ «"+c.name+"»: покупатели хотели "+want+" шт., а в наличии было "+stockTotal+". Заказы потеряны.");
+      p.stock.fbo-=fromFbo;p.stock.fbs-=fromFbs;
+      r.adOrders=Math.min(adOrders,sold);
+      r.orders=sold;r.revenue=sold*p.price;
+      const payout=sold*p.price*(1-c.comm)-fromFbo*LOG_FBO-fromFbs*LOG_FBS;
+      r.profit=payout-sold*c.cost-r.ad;
+      S.money+=payout;
+      // отзывы
+      for(let i=0;i<sold;i++){if(Math.random()<0.13)addReview(p,q)}
+    }
+    // хранение FBO
+    const stor=p.stock.fbo*STORAGE;S.money-=stor;r.profit-=stor;
+    rec.by[p.id]=r;rec.orders+=r.orders;rec.revenue+=r.revenue;rec.profit+=r.profit;rec.ad+=r.ad;
+    // предупреждения об остатках
+    if(p.published){
+      const a=avgOrders(p)||r.orders;const left=p.stock.fbo+p.stock.fbs;
+      if(left===0)msgs.push("🔴 «"+c.name+"» закончился. Карточка не продаётся.");
+      else if(a>0&&left/a<=3)msgs.push("🟠 «"+c.name+"»: остатка хватит примерно на "+Math.max(1,Math.floor(left/a))+" дн.");
+    }
+  });
+  // вынужденный негатив для миссии 10
+  const mi=S.missionIdx;
+  if(MISSIONS[mi]&&MISSIONS[mi].id==="m10"&&!S.reviews.some(r=>r.stars<=3&&!r.answer)){
+    const p=S.products.find(x=>x.published)||S.products[0];
+    S.reviews.push({id:Date.now()+"n",pid:p.id,d:day,stars:2,text:"Товар пришёл с царапиной, упаковка помята. Ожидал лучшего.",answer:""});
+    msgs.push("Новый отзыв 2★ — загляни в «Отзывы».");
+  }
+  // событие: конкурент снизил цену
+  const pub=S.products.filter(p=>p.published);
+  if(pub.length&&Math.random()<0.12){
+    const p=pub[Math.floor(Math.random()*pub.length)];
+    if(p.promoUntil<day){p.promoUntil=day+4;msgs.push("📉 Конкуренты снизили цены на «"+cat(p.id).name+"» примерно на 12 % на 5 дней. Подумай про цену или рекламу.")}
+  }
+  // серия без out of stock
+  const sellers=S.products.filter(p=>p.published);
+  if(sellers.length&&S.totals.orders+rec.orders>0){
+    const empty=sellers.some(p=>p.stock.fbo+p.stock.fbs===0);
+    S.flags.streak=empty?0:S.flags.streak+1;
+  }
+  S.history.push(rec);
+  S.totals.orders+=rec.orders;S.totals.revenue+=rec.revenue;S.totals.profit+=rec.profit;
+  S.day++;
+  S.log.unshift({d:day,t:"День "+day+": заказов "+rec.orders+", выручка "+rub(rec.revenue)+", прибыль "+rub(rec.profit)+"."});
+  msgs.reverse().forEach(m=>S.log.unshift({d:day,t:m}));
+  S.log=S.log.slice(0,120);
+  S.alerts=msgs;
+  checkMissions();save();render();
+  toast("День "+day+" завершён: заказов "+rec.orders+", прибыль "+rub(rec.profit));
+}
+const REV_GOOD=["Отличная вещь, всё как на фото!","Быстро пришло, качество хорошее.","Рекомендую, за свои деньги супер.","Брал в подарок — понравилось.","Соответствует описанию, спасибо!"];
+const REV_MID=["Нормально, но ожидал чуть лучше.","В целом ок, упаковка так себе.","Цвет немного отличается от фото."];
+const REV_BAD=["Пришло с браком, разочарован.","Не соответствует описанию.","Сломалось через неделю."];
+function addReview(p,q){
+  const x=Math.random();const p5=0.5+0.25*q,p4=p5+0.2,p3=p4+0.12,p2=p3+0.08;
+  const stars=x<p5?5:x<p4?4:x<p3?3:x<p2?2:1;
+  const pool=stars>=4?REV_GOOD:stars===3?REV_MID:REV_BAD;
+  S.reviews.push({id:Date.now()+""+Math.random(),pid:p.id,d:S.day,stars,text:pool[Math.floor(Math.random()*pool.length)],answer:""});
+}
+
+/* ============ МИССИИ ============ */
+function checkMissions(){
+  let changed=false;
+  while(S.missionIdx<MISSIONS.length&&MISSIONS[S.missionIdx].check(S)){
+    const m=MISSIONS[S.missionIdx];S.points+=100;S.missionIdx++;changed=true;
+    S.log.unshift({d:S.day,t:"✅ Миссия выполнена: «"+m.title+"» (+100 очков)"});
+    toast("✅ Миссия «"+m.title+"» выполнена! Прочитай «Как это в жизни».");
+    S.lastDone=m.id;
+  }
+  return changed;
+}
+
+/* ============ ИНТЕРФЕЙС ============ */
+const VIEWS=[["home","Сводка"],["products","Товары"],["supply","Поставки"],["prices","Цены"],["ads","Реклама"],["analytics","Аналитика"],["reviews","Отзывы"],["dict","Словарь"],["save","Сохранение"]];
+function render(){
+  document.getElementById("hDay").textContent=S.day;
+  document.getElementById("hMoney").textContent=rub(S.money);
+  const r=shopRating();document.getElementById("hRating").textContent=r===null?"—":r.toFixed(2)+"★";
+  document.getElementById("hPoints").textContent=S.points;
+  const unans=S.reviews.some(x=>x.stars<=3&&!x.answer);
+  document.getElementById("nav").innerHTML=VIEWS.map(([id,n])=>`<button data-view="${id}" class="${S.view===id?"active":""}">${n}${id==="reviews"&&unans?'<span class="dot"></span>':""}</button>`).join("");
+  const fn={home:vHome,products:vProducts,supply:vSupply,prices:vPrices,ads:vAds,analytics:vAnalytics,reviews:vReviews,dict:vDict,save:vSave}[S.view]||vHome;
+  document.getElementById("main").innerHTML=fn();
+  renderMission();
+}
+function productTabs(){
+  return `<div class="row" style="margin-bottom:12px">${S.products.map(p=>`<button class="btn small ${S.selected===p.id?"":"light"}" data-select="${p.id}">${esc(cat(p.id).name)}${p.published?" ●":""}</button>`).join("")}</div>`;
+}
+function vHome(){
+  const last=S.history[S.history.length-1];
+  const alerts=(S.alerts||[]).map(a=>`<div class="alert ${a.startsWith("🔴")||a.startsWith("⚠")?"bad":a.startsWith("🟠")||a.startsWith("📉")?"warn":"ok"}">${esc(a)}</div>`).join("");
+  return `<h1>Сводка</h1>
+  <div class="grid3" style="margin-bottom:16px">
+    <div class="kpi"><div class="v">${S.totals.orders}</div><div class="l">заказов всего</div></div>
+    <div class="kpi"><div class="v">${rub(S.totals.revenue)}</div><div class="l">выручка всего</div></div>
+    <div class="kpi"><div class="v" style="color:${S.totals.profit>=0?"var(--ok)":"var(--bad)"}">${rub(S.totals.profit)}</div><div class="l">прибыль всего</div></div>
+  </div>
+  <p class="muted" style="margin:-6px 0 16px">Деньги в товаре (на складах и в пути, по себестоимости): <b>${rub(inGoods())}</b>. Поэтому баланс может быть меньше стартового, даже когда прибыль есть.</p>
+  ${alerts?`<div class="card"><h2>События вчера</h2>${alerts}</div>`:""}
+  ${last?`<div class="card"><h2>Вчера (день ${last.day})</h2><div class="row"><span class="pill gray">Заказы: ${last.orders}</span><span class="pill gray">Выручка: ${rub(last.revenue)}</span><span class="pill ${last.profit>=0?"ok":"bad"}">Прибыль: ${rub(last.profit)}</span><span class="pill gray">Реклама: ${rub(last.ad)}</span></div></div>`:""}
+  <div class="card"><h2>Как играть</h2><ol class="tips"><li>Выполняй миссии в панели «Миссия» — они идут по порядку.</li><li>Кнопка «Следующий день» прокручивает время: идут продажи, приходят поставки и отзывы.</li><li>Все цифры учебные, но логика как в кабинетах реальных маркетплейсов.</li><li>Прогресс сохраняется в браузере сам. Для переноса на телефон — раздел «Сохранение».</li></ol></div>
+  <div class="card"><h2>Журнал</h2><div class="log">${S.log.map(l=>`<div><span class="muted">д.${l.d}</span> ${esc(l.t)}</div>`).join("")}</div></div>`;
+}
+function vProducts(){
+  const p=prod(S.selected),c=cat(p.id),cr=contentRating(p),parts=contentParts(p);
+  const stock=p.stock.fbo+p.stock.fbs;
+  return `<h1>Товары и карточки</h1>${productTabs()}
+  <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(c.name)}</h2>
+   <div class="row">${p.published?'<span class="pill ok">Опубликована</span>':'<span class="pill gray">Черновик</span>'}
+   <button class="btn small ${p.published?"ghost":""}" data-act="publish" ${(!p.published&&p.card.title.trim().length<10)?"disabled":""}>${p.published?"Снять с продажи":"Опубликовать"}</button></div></div>
+   <p class="muted" style="margin:6px 0 0">Себестоимость ${rub(c.cost)} · средняя цена на рынке ${rub(marketPrice(p))} · комиссия категории ${Math.round(c.comm*100)} % · остаток ${stock} шт.${p.published&&stock===0?' <span class="pill bad">нет остатков — не продаётся</span>':""}</p></div>
+  <div class="grid2">
+   <div class="card">
+    <h2>Карточка</h2>
+    <label for="f-title">Название (${p.card.title.length} симв.)</label><input id="f-title" type="text" data-card="title" value="${esc(p.card.title)}" placeholder="Что это + главное свойство + для кого">
+    <label for="f-desc">Описание (${p.card.desc.length} симв.)</label><textarea id="f-desc" data-card="desc" placeholder="Расскажи о товаре, используй ключевые слова естественно">${esc(p.card.desc)}</textarea>
+    <h3 style="margin-top:12px">Характеристики</h3>
+    ${c.chars.map((ch,i)=>`<label for="ch-${i}">${esc(ch)}</label><input id="ch-${i}" type="text" data-char="${esc(ch)}" value="${esc(p.card.chars[ch]||"")}">`).join("")}
+    <h3 style="margin-top:12px">Фото</h3>
+    ${PHOTOS.map(([id,n])=>`<label class="chk"><input type="checkbox" data-photo="${id}" ${p.card.photos[id]?"checked":""}> ${n}</label>`).join("")}
+    <label for="f-kws">Ключевые слова через запятую</label><input id="f-kws" type="text" data-card="kws" value="${esc(p.card.kws)}">
+   </div>
+   <div>
+    <div class="card" id="ratingBox">${ratingBox(p)}</div>
+    <div class="card"><h2>Поисковые запросы покупателей</h2><p class="muted" style="margin-top:0">Чем выше частота, тем чаще ищут. Нажми, чтобы добавить в ключевые слова.</p>
+     ${c.kws.map(([k,f])=>`<span class="kw" data-addkw="${esc(k)}">${esc(k)} <b>${f}</b></span>`).join("")}</div>
+   </div>
+  </div>`;
+}
+function vSupply(){
+  const p=prod(S.selected),c=cat(p.id);
+  return `<h1>Поставки и склады</h1>${productTabs()}
+  <div class="grid3" style="margin-bottom:16px">
+   <div class="kpi"><div class="v">${p.stock.fbo}</div><div class="l">на складе площадки (FBO)</div></div>
+   <div class="kpi"><div class="v">${p.stock.fbs}</div><div class="l">у тебя дома (FBS)</div></div>
+   <div class="kpi"><div class="v">${p.transit.reduce((a,t)=>a+t.qty,0)}</div><div class="l">в пути на склад</div></div>
+  </div>
+  <div class="grid2">
+   <div class="card"><h2>Поставка FBO</h2><p class="muted" style="margin-top:0">Закупаешь товар и везёшь на склад площадки. Хранение ${STORAGE} ₽/шт в день, логистика до покупателя ${LOG_FBO} ₽/шт.</p>
+    <label for="s-wh">Склад</label><select id="s-wh">${WAREHOUSES.map(w=>`<option value="${w.id}">${w.name} — приёмка ${w.days} дн., доставка на склад ${w.fee} ₽/шт</option>`).join("")}</select>
+    <label for="s-qty">Количество, шт</label><input id="s-qty" type="number" min="1" value="30">
+    <p class="muted" id="s-sum"></p>
+    <button class="btn" data-act="fbo">Создать поставку</button></div>
+   <div class="card"><h2>Закупка под FBS</h2><p class="muted" style="margin-top:0">Товар лежит у тебя, площадка забирает заказы. Хранение бесплатно, но логистика ${LOG_FBS} ₽/шт и заказов меньше: доставка дольше.</p>
+    <label for="s-fbs">Количество, шт</label><input id="s-fbs" type="number" min="1" value="10">
+    <button class="btn" data-act="fbs">Закупить</button></div>
+  </div>
+  <div class="card"><h2>Поставки в пути</h2>${p.transit.length?`<table><tr><th>Склад</th><th>Кол-во</th><th>Приедет</th></tr>${p.transit.map(t=>`<tr><td>${esc(t.wh)}</td><td>${t.qty}</td><td>день ${t.arrive}</td></tr>`).join("")}</table>`:'<p class="muted">Нет поставок в пути.</p>'}</div>
+  <div class="card"><h2>Остатки по всем товарам</h2><div class="tablewrap"><table><tr><th>Товар</th><th>FBO</th><th>FBS</th><th>В пути</th><th>Продаж/день</th><th>Хватит на</th></tr>
+  ${S.products.map(x=>{const a=avgOrders(x),l=x.stock.fbo+x.stock.fbs;return `<tr><td>${esc(cat(x.id).name)}</td><td>${x.stock.fbo}</td><td>${x.stock.fbs}</td><td>${x.transit.reduce((s,t)=>s+t.qty,0)}</td><td>${a.toFixed(1)}</td><td>${a>0?`<span class="pill ${l/a<=3?"bad":l/a<=7?"warn":"ok"}">${Math.floor(l/a)} дн.</span>`:"—"}</td></tr>`}).join("")}</table></div></div>`;
+}
+function vPrices(){
+  const p=prod(S.selected),c=cat(p.id),u=unit(p,"fbo"),f=unit(p,"fbs");
+  const row=(n,a,b)=>`<tr><td>${n}</td><td>${a}</td><td>${b}</td></tr>`;
+  return `<h1>Цены и юнит-экономика</h1>${productTabs()}
+  <div class="grid2">
+   <div class="card"><h2>Цена товара</h2><p class="muted" style="margin-top:0">Средняя цена конкурентов: <b>${rub(marketPrice(p))}</b>${p.promoUntil>=S.day?' <span class="pill warn">конкуренты снизили цены</span>':""}</p>
+    <label for="p-price">Твоя цена, ₽</label><input id="p-price" type="number" min="1" value="${p.price}">
+    <div class="row" style="margin-top:10px"><button class="btn" data-act="price">Сохранить цену</button>${p.priceSet?'<span class="pill ok">цена сохранена</span>':""}</div>
+    <p class="muted">Дороже рынка — меньше заказов. Дешевле — больше заказов, но меньше прибыль с каждого.</p></div>
+   <div class="card"><h2>Юнит-экономика за 1 шт</h2><div class="tablewrap"><table><tr><th></th><th>FBO</th><th>FBS</th></tr>
+    ${row("Цена",rub(u.price),rub(f.price))}
+    ${row("Комиссия "+Math.round(c.comm*100)+" %","−"+rub(u.comm),"−"+rub(f.comm))}
+    ${row("Логистика","−"+rub(u.log),"−"+rub(f.log))}
+    ${row("Хранение (≈7 дней)","−"+rub(u.stor),"−"+rub(f.stor))}
+    ${row("Себестоимость","−"+rub(u.cost),"−"+rub(f.cost))}
+    <tr><td><b>Прибыль</b></td><td><b style="color:${u.profit>=0?"var(--ok)":"var(--bad)"}">${rub(u.profit)}</b></td><td><b style="color:${f.profit>=0?"var(--ok)":"var(--bad)"}">${rub(f.profit)}</b></td></tr>
+    <tr><td><b>Маржа</b></td><td><span class="pill ${u.margin>=20?"ok":u.margin>=0?"warn":"bad"}">${pct(u.margin)}</span></td><td><span class="pill ${f.margin>=20?"ok":f.margin>=0?"warn":"bad"}">${pct(f.margin)}</span></td></tr>
+   </table></div><p class="muted">Реклама в расчёт не входит: её считаем через ДРР в разделе «Реклама».</p></div>
+  </div>`;
+}
+function vAds(){
+  const p=prod(S.selected);
+  const h=S.history.slice(-7).map(d=>({day:d.day,...(d.by[p.id]||{})})).filter(x=>x.ad>0);
+  const sum=h.reduce((a,x)=>({impr:a.impr+x.impr,clicks:a.clicks+x.clicks,ad:a.ad+x.ad,ao:a.ao+x.adOrders}),{impr:0,clicks:0,ad:0,ao:0});
+  const adRev=sum.ao*p.price;
+  return `<h1>Реклама</h1>${productTabs()}
+  <div class="grid2">
+   <div class="card"><h2>Кампания в поиске</h2>${p.published?"":'<div class="alert warn">Карточка не опубликована — реклама не сработает.</div>'}
+    <label class="chk"><input type="checkbox" id="a-on" ${p.ad.on?"checked":""}> Реклама включена</label>
+    <label for="a-budget">Бюджет в день, ₽</label><input id="a-budget" type="number" min="0" step="50" value="${p.ad.budget}">
+    <label for="a-bid">Ставка за 1000 показов (CPM), ₽ — средняя у конкурентов 300 ₽</label><input id="a-bid" type="number" min="50" step="10" value="${p.ad.bid}">
+    <p class="muted">Показов в день будет ≈ ${Math.round(p.ad.budget/Math.max(1,p.ad.bid)*1000).toLocaleString("ru-RU")}. Выше ставка — выше место и CTR, но меньше показов на тот же бюджет.</p>
+    <button class="btn" data-act="ad">Сохранить кампанию</button></div>
+   <div class="card"><h2>Статистика за 7 дней</h2>${h.length?`
+    <div class="grid2">
+     <div class="kpi"><div class="v">${sum.impr.toLocaleString("ru-RU")}</div><div class="l">показы</div></div>
+     <div class="kpi"><div class="v">${sum.clicks}</div><div class="l">клики</div></div>
+     <div class="kpi"><div class="v">${sum.impr?pct(sum.clicks/sum.impr*100):"—"}</div><div class="l">CTR = клики ÷ показы</div></div>
+     <div class="kpi"><div class="v">${sum.clicks?pct(sum.ao/sum.clicks*100):"—"}</div><div class="l">CR = заказы ÷ клики</div></div>
+     <div class="kpi"><div class="v">${rub(sum.ad)}</div><div class="l">расход</div></div>
+     <div class="kpi"><div class="v">${adRev?pct(sum.ad/adRev*100):"—"}</div><div class="l">ДРР = расход ÷ выручка с рекламы</div></div>
+    </div><p class="muted">Заказов с рекламы: ${sum.ao}, выручка с них ${rub(adRev)}.</p>`:'<p class="muted">Пока нет данных. Включи рекламу и проживи пару дней.</p>'}</div>
+  </div>`;
+}
+function svgChart(data,key,color,label){
+  const W=640,H=200,P=36;const vals=data.map(d=>d[key]);
+  const max=Math.max(1,...vals),min=Math.min(0,...vals);
+  const x=i=>P+(data.length<2?0:i*(W-P*2)/(data.length-1));
+  const yy=v=>H-P-(v-min)*(H-P*2)/((max-min)||1);
+  const pts=data.map((d,i)=>`${x(i)},${yy(d[key])}`).join(" ");
+  const ticks=[min,(min+max)/2,max].map(v=>`<line x1="${P}" x2="${W-P/2}" y1="${yy(v)}" y2="${yy(v)}" stroke="#e3e6ec"/><text x="4" y="${yy(v)+4}" font-size="11" fill="#667085">${Math.round(v).toLocaleString("ru-RU")}</text>`).join("");
+  const xl=data.map((d,i)=>(data.length<=10||i%Math.ceil(data.length/10)===0)?`<text x="${x(i)}" y="${H-10}" font-size="11" fill="#667085" text-anchor="middle">${d.day}</text>`:"").join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${ticks}<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5"/>${data.map((d,i)=>`<circle cx="${x(i)}" cy="${yy(d[key])}" r="3" fill="${color}"><title>День ${d.day}: ${Math.round(d[key]).toLocaleString("ru-RU")}</title></circle>`).join("")}${xl}</svg>`;
+}
+function vAnalytics(){
+  const h=S.history.slice(-30);
+  if(!h.length)return `<h1>Аналитика</h1><div class="card"><p class="muted">Данных пока нет. Нажми «Следующий день», чтобы появились продажи.</p></div>`;
+  return `<h1>Аналитика</h1>
+  <div class="card"><h2>Заказы по дням</h2>${svgChart(h,"orders","#5b3df5","Заказы по дням")}</div>
+  <div class="card"><h2>Прибыль по дням, ₽</h2>${svgChart(h,"profit","#12805c","Прибыль по дням")}</div>
+  <div class="card"><h2>По товарам</h2><div class="tablewrap"><table><tr><th>Товар</th><th>Заказы</th><th>Выручка</th><th>Прибыль</th><th>Остаток</th><th>Хватит на</th><th>Рейтинг карточки</th></tr>
+  ${S.products.map(p=>{const o=S.history.reduce((a,d)=>a+((d.by[p.id]||{}).orders||0),0),rv=S.history.reduce((a,d)=>a+((d.by[p.id]||{}).revenue||0),0),pr=S.history.reduce((a,d)=>a+((d.by[p.id]||{}).profit||0),0),l=p.stock.fbo+p.stock.fbs,a=avgOrders(p);
+   return `<tr><td>${esc(cat(p.id).name)}</td><td>${o}</td><td>${rub(rv)}</td><td style="color:${pr>=0?"var(--ok)":"var(--bad)"}">${rub(pr)}</td><td>${l}</td><td>${a>0?Math.floor(l/a)+" дн.":"—"}</td><td>${contentRating(p)}</td></tr>`}).join("")}
+  </table></div></div>`;
+}
+function vReviews(){
+  const list=S.reviews.slice().reverse().slice(0,40);
+  const r=shopRating();
+  return `<h1>Отзывы</h1><div class="card"><p style="margin:0">Рейтинг магазина: <b>${r===null?"нет отзывов":r.toFixed(2)+"★"}</b> · отзывов: ${S.reviews.length}. Неотвеченные отзывы на 3★ и ниже старше 2 дней снижают продажи.</p></div>
+  ${list.length?list.map(v=>`<div class="review"><div class="row" style="justify-content:space-between"><span class="stars">${"★".repeat(v.stars)}${"☆".repeat(5-v.stars)}</span><span class="muted">${esc(cat(v.pid).name)} · день ${v.d}</span></div>
+   <p style="margin:6px 0">${esc(v.text)}</p>
+   ${v.answer?`<div class="alert ok"><b>Ответ магазина:</b> ${esc(v.answer)}</div>`:`<label for="ans-${v.id}">Ответ</label><textarea id="ans-${v.id}" placeholder="Поблагодари, признай проблему, предложи решение"></textarea><button class="btn small" data-answer="${v.id}" style="margin-top:6px">Ответить</button>`}</div>`).join(""):'<div class="card"><p class="muted">Отзывов пока нет — они появляются с продажами.</p></div>'}`;
+}
+function vDict(){return `<h1>Словарь</h1><div class="card"><dl class="dict">${DICT.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></div>`}
+function vSave(){
+  return `<h1>Сохранение</h1><div class="card"><p>Прогресс сохраняется в этом браузере автоматически. Чтобы продолжить на другом устройстве — скачай файл сохранения и загрузи его там.</p>
+  <div class="row"><button class="btn" data-act="export">Скачать сохранение</button><button class="btn light" data-act="import">Загрузить сохранение</button></div></div>
+  <div class="card"><h2>Начать заново</h2><p class="muted">Сотрёт весь прогресс в этом браузере.</p><button class="btn ghost" data-act="reset1">Начать заново</button><div id="resetConfirm"></div></div>`;
+}
+function renderMission(){
+  const el=document.getElementById("mission");
+  const done=S.missionIdx;
+  const prevM=MISSIONS.find(m=>m.id===S.lastDone);
+  const prev=prevM?`<div class="life"><b>Как это в жизни · «${prevM.title}»</b><br>${prevM.life}</div>`:"";
+  if(done>=MISSIONS.length){el.innerHTML=`<h3>🏆 Все миссии пройдены!</h3><p>Очки: <b>${S.points}</b>. Теперь можешь честно говорить на собеседовании, что разбираешься в карточках, поставках FBO/FBS, юнит-экономике, рекламе и отзывах.</p>${prev}<p class="muted">Продолжай играть: попробуй вывести все 5 товаров в плюс.</p>`;return}
+  const m=MISSIONS[done];
+  let quiz="";
+  if(m.quiz){
+    const adDays=Math.max(0,...S.products.map(p=>p.adDays));
+    quiz=adDays<m.quiz.needAdDays?`<p class="muted">Реклама работала ${adDays} из ${m.quiz.needAdDays} дней.</p>`:
+     `<div class="quiz"><p><b>${m.quiz.q}</b></p>${m.quiz.opts.map((o,i)=>`<button class="btn" data-quiz="${i}">${o}</button>`).join("")}</div>`;
+  }
+  let extra="";
+  if(m.id==="m11")extra=`<p class="muted">Серия без пустых остатков: <b>${S.flags.streak}</b> из 7 дней.</p>`;
+  if(m.id==="m12")extra=`<p class="muted">Прибыль сейчас: <b>${rub(S.totals.profit)}</b> из 5 000 ₽.</p>`;
+  el.innerHTML=`<div class="progress">Миссия ${done+1} из ${MISSIONS.length}</div><h3>${m.title}</h3><div class="task">${m.task}</div>${quiz}${extra}${prev}`;
+}
+let toastTimer;
+function toast(t){let el=document.querySelector(".toast");if(!el){el=document.createElement("div");el.className="toast";document.body.appendChild(el)}el.textContent=t;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.remove(),3500)}
+
+/* ============ СОБЫТИЯ ============ */
+document.getElementById("nextDay").addEventListener("click",nextDay);
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-view],[data-select],[data-act],[data-addkw],[data-answer],[data-quiz]");if(!t)return;
+  if(t.dataset.view){S.view=t.dataset.view;S.alertsSeen=true;save();render();window.scrollTo({top:0});return}
+  if(t.dataset.select){S.selected=t.dataset.select;save();render();return}
+  const p=prod(S.selected),c=cat(p.id);
+  if(t.dataset.addkw){const list=kwList(p);if(!list.includes(t.dataset.addkw)){p.card.kws=(p.card.kws.trim()?p.card.kws.trim().replace(/,\s*$/,"")+", ":"")+t.dataset.addkw}save();checkMissions();render();return}
+  if(t.dataset.answer){const v=S.reviews.find(x=>x.id===t.dataset.answer);const ta=document.getElementById("ans-"+v.id);const txt=(ta.value||"").trim();
+    if(txt.length<15){toast("Ответ слишком короткий");return}
+    if(/дур|туп|сам виноват|идиот|бред/i.test(txt)){toast("Так покупателям не отвечают. Без грубости — перепиши.");return}
+    v.answer=txt;save();checkMissions();render();toast("Ответ опубликован");return}
+  if(t.dataset.quiz!==undefined){const m=MISSIONS[S.missionIdx];if(+t.dataset.quiz===m.quiz.ok){S.flags.quizDone=true;checkMissions();save();render()}else{toast("Неверно. Подсказка: ДРР = расходы на рекламу ÷ выручка × 100 %")}return}
+  const act=t.dataset.act;
+  if(act==="publish"){
+    if(!p.published){p.published=true;p.pubDay=S.day;S.log.unshift({d:S.day,t:"Карточка «"+c.name+"» опубликована."});if(p.stock.fbo+p.stock.fbs===0)toast("Опубликовано, но остатков нет — продаж не будет, пока не привезёшь товар.")}
+    else{p.published=false;p.ad.on=false}
+    save();checkMissions();render();return}
+  if(act==="fbo"){
+    const qty=Math.floor(+document.getElementById("s-qty").value),w=WAREHOUSES.find(x=>x.id===document.getElementById("s-wh").value);
+    if(!(qty>0)){toast("Укажи количество");return}
+    const cost=qty*(c.cost+w.fee);if(cost>S.money){toast("Не хватает денег: нужно "+rub(cost));return}
+    S.money-=cost;p.transit.push({qty,arrive:S.day+w.days,wh:w.name,scheme:"fbo"});
+    S.log.unshift({d:S.day,t:"Поставка FBO: "+c.name+" "+qty+" шт на "+w.name+", закупка и доставка "+rub(cost)+"."});
+    save();checkMissions();render();toast("Поставка создана, приедет на "+w.days+"-й день");return}
+  if(act==="fbs"){
+    const qty=Math.floor(+document.getElementById("s-fbs").value);if(!(qty>0)){toast("Укажи количество");return}
+    const cost=qty*c.cost;if(cost>S.money){toast("Не хватает денег: нужно "+rub(cost));return}
+    S.money-=cost;p.stock.fbs+=qty;S.log.unshift({d:S.day,t:"Закупка FBS: "+c.name+" "+qty+" шт за "+rub(cost)+"."});
+    save();checkMissions();render();toast("Товар у тебя дома, готов к FBS");return}
+  if(act==="price"){const v=Math.round(+document.getElementById("p-price").value);if(!(v>0)){toast("Укажи цену");return}p.price=v;p.priceSet=true;save();checkMissions();render();toast("Цена сохранена");return}
+  if(act==="ad"){p.ad.on=document.getElementById("a-on").checked;p.ad.budget=Math.max(0,Math.round(+document.getElementById("a-budget").value));p.ad.bid=Math.max(50,Math.round(+document.getElementById("a-bid").value));
+    if(p.ad.on&&!p.published)toast("Сначала опубликуй карточку");save();checkMissions();render();toast(p.ad.on?"Кампания включена":"Кампания выключена");return}
+  if(act==="export"){const blob=new Blob([JSON.stringify(S)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="marketlab-save-day"+S.day+".json";document.body.appendChild(a);a.click();a.remove();return}
+  if(act==="import"){document.getElementById("importFile").click();return}
+  if(act==="reset1"){document.getElementById("resetConfirm").innerHTML=`<p><b>Точно стереть прогресс?</b></p><button class="btn" data-act="reset2">Да, начать заново</button>`;return}
+  if(act==="reset2"){S=newState();save();render();toast("Новая игра");return}
+});
+document.addEventListener("input",e=>{
+  const t=e.target,p=prod(S.selected);
+  if(t.dataset.card){p.card[t.dataset.card]=t.value}
+  else if(t.dataset.char){p.card.chars[t.dataset.char]=t.value}
+  else return;
+  save();
+  if(S.view==="products")updRating(t);
+  if(checkMissions()){save();renderMission()}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.photo){prod(S.selected).card.photos[t.dataset.photo]=t.checked;save();updRating(t);if(checkMissions()){save();renderMission()}return}
+  if(t.id==="s-qty"||t.id==="s-wh"){updSum()}
+});
+function ratingBox(p){const parts=contentParts(p),cr=contentRating(p);
+  return `<h2>Контент-рейтинг: ${cr}/100</h2><div class="meter"><i style="width:${cr}%;background:${cr>=80?"var(--ok)":cr>=50?"var(--warn)":"var(--bad)"}"></i></div><ul class="tips" style="padding-left:18px">${parts.map(([n,v,m])=>`<li>${v>=m?"✅":"⬜"} ${esc(n)} <span class="muted">${v}/${m}</span></li>`).join("")}</ul>`}
+function updRating(t){ // обновляем рейтинг без перерисовки формы, чтобы не сбивать фокус
+  const p=prod(S.selected),box=document.getElementById("ratingBox");if(box)box.innerHTML=ratingBox(p);
+  if(t.id==="f-title"||t.id==="f-desc"){const lab=document.querySelector('label[for="'+t.id+'"]');if(lab)lab.textContent=(t.id==="f-title"?"Название":"Описание")+" ("+t.value.length+" симв.)"}
+  const pb=document.querySelector('[data-act="publish"]');if(pb&&!p.published)pb.disabled=p.card.title.trim().length<10;
+}
+function updSum(){const q=document.getElementById("s-qty"),w=document.getElementById("s-wh"),o=document.getElementById("s-sum");if(!q||!o)return;const p=prod(S.selected),c=cat(p.id),wh=WAREHOUSES.find(x=>x.id===w.value);o.textContent="Закупка + доставка на склад: "+rub(Math.max(0,Math.floor(+q.value))*(c.cost+wh.fee))}
+document.addEventListener("input",e=>{if(e.target.id==="s-qty")updSum()});
+document.getElementById("importFile").addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(d.v!==1||!d.products)throw 0;S=d;save();render();toast("Сохранение загружено: день "+S.day)}catch(err){toast("Это не файл сохранения Маркет-Лаб")}};
+  r.readAsText(f);e.target.value="";
+});
+const _render=render;render=function(){_render();if(S.view==="supply")updSum()};
+render();
+</script>
+</body>
+</html>
