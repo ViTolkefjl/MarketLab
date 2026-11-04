@@ -799,7 +799,7 @@ function chart(data,color){
   const x=i=>L+(data.length<2?(W-L-R)/2:i*(W-L-R)/(data.length-1)),y=v=>Tp+(1-v/max)*(Hh-Tp-B);
   const grid=[0,.5,1].map(f=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(max*f)+'" y2="'+y(max*f)+'" stroke="#e4e6eb"/><text x="'+(L-6)+'" y="'+(y(max*f)+4)+'" font-size="13" fill="#6b7180" text-anchor="end">'+num(max*f)+'</text>').join("");
   const step=Math.ceil(data.length/6);
-  const xl=data.map((d,i)=>i%step===0||i===data.length-1?'<text x="'+x(i)+'" y="'+(Hh-8)+'" font-size="13" fill="#6b7180" text-anchor="middle">'+dateOf(d.day)+'</text>':"").join("");
+  const xl=data.map((d,i)=>i%step===0||(i===data.length-1&&(data.length-1)%step>=step/2)?'<text x="'+x(i)+'" y="'+(Hh-8)+'" font-size="13" fill="#6b7180" text-anchor="middle">'+dateOf(d.day)+'</text>':"").join("");
   const pts=data.map((d,i)=>x(i)+","+y(d.v)).join(" ");
   const area='<polygon points="'+x(0)+","+y(0)+" "+pts+" "+x(data.length-1)+","+y(0)+'" fill="'+color+'" opacity=".08"/>';
   return'<svg class="chart" viewBox="0 0 '+W+' '+Hh+'" role="img" style="font-size:13px">'+grid+area+'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2"/>'+data.map((d,i)=>'<circle cx="'+x(i)+'" cy="'+y(d.v)+'" r="3" fill="'+color+'"><title>'+dateOf(d.day)+": "+num(d.v)+'</title></circle>').join("")+xl+'</svg>';
